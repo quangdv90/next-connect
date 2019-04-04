@@ -4,43 +4,43 @@ const mongodbErrorHandler = require("mongoose-mongodb-errors");
 const passportLocalMongoose = require("passport-local-mongoose");
 
 const userSchema = new mongoose.Schema(
-  {
-    email: {
-      type: String,
-      trim: true,
-      lowercase: true,
-      unique: true,
-      required: "Email is required"
+    {
+        email: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            unique: true,
+            required: "Email is required"
+        },
+        name: {
+            type: String,
+            trim: true,
+            unique: true,
+            minlength: 4,
+            maxlength: 10,
+            required: "Name is required"
+        },
+        avatar: {
+            type: String,
+            required: "Avatar image is required",
+            default: "/static/images/profile-image.jpg"
+        },
+        about: {
+            type: String,
+            trim: true
+        },
+        /* we wrap 'following' and 'followers' in array so that when they are populated as objects, they are put in an array (to more easily iterate over them) */
+        following: [{ type: ObjectId, ref: "User" }],
+        followers: [{ type: ObjectId, ref: "User" }]
     },
-    name: {
-      type: String,
-      trim: true,
-      unique: true,
-      minlength: 4,
-      maxlength: 10,
-      required: "Name is required"
-    },
-    avatar: {
-      type: String,
-      required: "Avatar image is required",
-      default: "/static/images/profile-image.jpg"
-    },
-    about: {
-      type: String,
-      trim: true
-    },
-    /* we wrap 'following' and 'followers' in array so that when they are populated as objects, they are put in an array (to more easily iterate over them) */
-    following: [{ type: ObjectId, ref: "User" }],
-    followers: [{ type: ObjectId, ref: "User" }]
-  },
-  /* gives us "createdAt" and "updatedAt" fields automatically */
-  { timestamps: true }
+    /* gives us "createdAt" and "updatedAt" fields automatically */
+    { timestamps: true }
 );
 
-const autoPopulateFollowingAndFollowers = function(next) {
-  this.populate("following", "_id name avatar");
-  this.populate("followers", "_id name avatar");
-  next();
+const autoPopulateFollowingAndFollowers = function (next) {
+    this.populate("following", "_id name avatar");
+    this.populate("followers", "_id name avatar");
+    next();
 };
 
 userSchema.pre("findOne", autoPopulateFollowingAndFollowers);
