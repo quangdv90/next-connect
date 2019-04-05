@@ -51,13 +51,15 @@ exports.signin = (req, res, next) => {
 };
 
 exports.signout = (req, res) => {
-    res.clearCookie('next-connect.sid');
     req.logout();
+    res.clearCookie('next-connect.sid');
     res.json({ message: 'You are now signed out.' });
 };
 
 exports.checkAuth = (req, res, next) => {
-    if (req.isAuthenticated()) return next();
-
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    // res.status(401).json({ message: 'You need to be authenticated to access this action' });
     res.redirect('/signin');
 };

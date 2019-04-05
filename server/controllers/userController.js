@@ -21,12 +21,12 @@ exports.getAuthUser = (req, res) => {
 
 exports.getUserById = async (req, res, next, id) => {
     const user = await User.findOne({ _id: id });
-    
+
     req.profile = user;
 
     const profileId = mongoose.Types.ObjectId(req.profile._id);
 
-    if (profileId.equals(req.user._id)) {
+    if (req.user && profileId.equals(req.user._id)) {
         req.isAuthUser = true;
         return next();
     }
@@ -83,8 +83,6 @@ exports.resizeAvatar = async (req, res, next) => {
 };
 
 exports.updateUser = async (req, res) => {
-    console.log(req.body)
-
     req.body.updatedAt = new Date().toISOString();
 
     const updatedUser = await User.findOneAndUpdate(
