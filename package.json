@@ -1,5 +1,8 @@
 {
   "name": "next-connect",
+  "quokka": {
+    "babel": true
+  },
   "version": "1.0.0",
   "description": "",
   "main": "app.js",

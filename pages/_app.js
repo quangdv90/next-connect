@@ -8,6 +8,8 @@ import JssProvider from "react-jss/lib/JssProvider";
 import Navbar from "../components/Navbar";
 import getPageContext from "../lib/getPageContext";
 
+import NProgress from "next-nprogress/component";
+
 class MyApp extends App {
     constructor(props) {
         super(props);
@@ -45,6 +47,8 @@ class MyApp extends App {
                         <Component pageContext={this.pageContext} {...pageProps} />
                     </MuiThemeProvider>
                 </JssProvider>
+
+                <NProgress color="#e34234" spinner={false} />
             </Container>
         );
     }

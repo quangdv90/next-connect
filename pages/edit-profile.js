@@ -1,28 +1,235 @@
-// import Avatar from "@material-ui/core/Avatar";
-// import FormControl from "@material-ui/core/FormControl";
-// import Paper from "@material-ui/core/Paper";
-// import Input from "@material-ui/core/Input";
-// import InputLabel from "@material-ui/core/InputLabel";
-// import Snackbar from "@material-ui/core/Snackbar";
-// import Dialog from "@material-ui/core/Dialog";
-// import DialogActions from "@material-ui/core/DialogActions";
-// import DialogContent from "@material-ui/core/DialogContent";
-// import DialogContentText from "@material-ui/core/DialogContentText";
-// import DialogTitle from "@material-ui/core/DialogTitle";
-// import VerifiedUserTwoTone from "@material-ui/icons/VerifiedUserTwoTone";
-// import Typography from "@material-ui/core/Typography";
-// import Button from "@material-ui/core/Button";
-// import CloudUpload from "@material-ui/icons/CloudUpload";
-// import FaceTwoTone from "@material-ui/icons/FaceTwoTone";
-// import EditSharp from "@material-ui/icons/EditSharp";
+import Avatar from "@material-ui/core/Avatar";
+import FormControl from "@material-ui/core/FormControl";
+import Paper from "@material-ui/core/Paper";
+import Input from "@material-ui/core/Input";
+import InputLabel from "@material-ui/core/InputLabel";
+import Snackbar from "@material-ui/core/Snackbar";
+import Dialog from "@material-ui/core/Dialog";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import VerifiedUserTwoTone from "@material-ui/icons/VerifiedUserTwoTone";
+import Typography from "@material-ui/core/Typography";
+import Button from "@material-ui/core/Button";
+import CloudUpload from "@material-ui/icons/CloudUpload";
+import FaceTwoTone from "@material-ui/icons/FaceTwoTone";
+import EditSharp from "@material-ui/icons/EditSharp";
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
 import withStyles from "@material-ui/core/styles/withStyles";
 import { authInitialProps } from "../lib/auth";
+import { getAuthUser, updateUser } from "../lib/api";
+import Router from 'next/router';
 
 class EditProfile extends React.Component {
-    state = {};
+    state = {
+        _id: '',
+        name: '',
+        email: '',
+        about: '',
+        avatar: '',
+        avatarPreview: '',
+        updatedUser: {},
+        error: '',
+        openError: false,
+        openSuccess: false,
+        isSaving: false,
+        isLoading: true
+    };
+
+    componentDidMount() {
+        const { auth } = this.props;
+
+        this.userData = new FormData()
+
+        getAuthUser(auth.user._id)
+            .then(user => {
+                this.setState({
+                    ...user,
+                    isLoading: false
+                })
+            })
+            .catch(err => {
+                console.error(err);
+                this.setState({ isLoading: false });
+            });
+    }
+
+    handleClose = () => this.setState({ openError: false });
+
+    handleChange = event => {
+        let inputValue;
+
+        if (event.target.name === 'avatar') {
+            inputValue = event.target.files[0];
+
+            this.setState({
+                avatarPreview: this.createPreviewImage(inputValue)
+            });
+        } else {
+            inputValue = event.target.value;
+        }
+
+        this.userData.set(event.target.name, inputValue);
+        this.setState({
+            [event.target.name]: inputValue
+        });
+    }
+
+    createPreviewImage = file => URL.createObjectURL(file);
+
+    handleSubmit = event => {
+        event.preventDefault();
+
+        this.setState({ isSaving: true });
+
+        const { _id } = this.state;
+
+        updateUser(_id, this.userData)
+            .then(updatedUser => {
+                this.setState({ updatedUser, openSuccess: true, isSaving: false });
+                setTimeout(() => Router.push(`/profile/${_id}`), 6000);
+            })
+            .catch(this.showError);
+    }
+
+    showError = err => {
+        const error = err.response && err.response.data || err.message;
+        this.setState({ error, openError: true, isSaving: false });
+    }
 
     render() {
-        return <div>EditProfile</div>;
+        const { classes } = this.props;
+        const {
+            name,
+            email,
+            about,
+            avatar,
+            avatarPreview,
+            isLoading,
+            isSaving,
+            updatedUser,
+            openSuccess,
+            openError,
+            error
+        } = this.state;
+
+        return (
+            <div className={classes.root}>
+                <Paper className={classes.paper}>
+                    <Avatar className={classes.avatar}>
+                        <EditSharp />
+                    </Avatar>
+
+                    <Typography variant="h5" component="h1">
+                        Edit Profile
+                    </Typography>
+
+                    {/* Edit Profile Form */}
+                    <form className={classes.form} onSubmit={this.handleSubmit} noValidate autoComplete="off">
+                        {
+                            isLoading
+                                ? (
+                                    <Avatar className={classes.bigAvatar}>
+                                        <FaceTwoTone />
+                                    </Avatar>
+                                ) : (
+                                    <Avatar src={avatarPreview || avatar} className={classes.bigAvatar} />
+                                )
+                        }
+
+                        <input
+                            type="file"
+                            name="avatar"
+                            id="avatar"
+                            accept="image/*"
+                            onChange={this.handleChange}
+                            className={classes.input} />
+
+                        <label htmlFor="avatar" className={classes.uploadButton}>
+                            <Button variant="contained" color="secondary" component="span" disabled={isLoading}>
+                                Upload Image <CloudUpload />
+                            </Button>
+                        </label>
+
+                        <span className={classes.filename}>{avatar && avatar.name}</span>
+
+                        <FormControl margin="normal" required fullWidth>
+                            <InputLabel htmlFor="name">Name</InputLabel>
+                            <Input
+                                type="text"
+                                name="name"
+                                value={name}
+                                onChange={this.handleChange} />
+                        </FormControl>
+
+                        <FormControl margin="normal" fullWidth>
+                            <InputLabel htmlFor="about">About</InputLabel>
+                            <Input
+                                type="text"
+                                name="about"
+                                value={about}
+                                onChange={this.handleChange} />
+                        </FormControl>
+
+                        <FormControl margin="normal" required fullWidth>
+                            <InputLabel htmlFor="email">Email</InputLabel>
+                            <Input
+                                type="email"
+                                name="email"
+                                value={email}
+                                onChange={this.handleChange} />
+                        </FormControl>
+
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            color="primary"
+                            className={classes.submit}
+                            disabled={isSaving || isLoading}>
+                            
+                            {isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                    </form>
+                </Paper>
+
+                {/* Error Snackbar */}
+                {error && <Snackbar
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right'
+                    }}
+                    open={openError}
+                    onClose={this.handleClose}
+                    autoHideDuration={6000}
+                    message={<span className={classes.snack}>{error}</span>}
+                    action={(<IconButton
+                        key="close"
+                        aria-label="Close"
+                        color="inherit"
+                        className={classes.close}
+                        onClick={this.handleClose}><CloseIcon /></IconButton>)} />}
+
+                {/* Dialog Success */}
+                <Dialog
+                    open={openSuccess}
+                    disableBackdropClick={true}>
+
+                    <DialogTitle>
+                        <VerifiedUserTwoTone className={classes.icon} />
+                        Profile updated
+                    </DialogTitle>
+
+                    <DialogContent>
+                        <DialogContentText>
+                            User {updateUser && updatedUser.name} was updated successfully!
+                            </DialogContentText>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        );
     }
 }
 
