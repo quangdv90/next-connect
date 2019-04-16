@@ -11,6 +11,7 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Divider from "@material-ui/core/Divider";
 import Edit from "@material-ui/icons/Edit";
 import withStyles from "@material-ui/core/styles/withStyles";
+import distanceInWordsToNow from 'date-fns/distance_in_words_to_now';
 import Link from 'next/link';
 import { authInitialProps } from "../lib/auth";
 import {
@@ -196,7 +197,7 @@ class Profile extends React.Component {
                             <Divider />
 
                             <ListItem>
-                                <ListItemText primary={user.about} secondary={`Joined: ${user.createdAt}`} />
+                                <ListItemText primary={user.about} secondary={`Joined: ${distanceInWordsToNow(user.createdAt, { addSuffix: true })}`} />
                             </ListItem>
 
                             {/* Display user's Posts, Following, and Followers */}
