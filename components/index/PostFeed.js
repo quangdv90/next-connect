@@ -1,7 +1,7 @@
 import Typography from "@material-ui/core/Typography";
 import withStyles from "@material-ui/core/styles/withStyles";
 
-import { addPost, deletePost, getPostFeed } from '../../lib/api';
+import { addPost, deletePost, getPostFeed, likePost, unlikePost, addComment, deleteComment } from '../../lib/api';
 import NewPost from './NewPost';
 import Post from './Post';
 
@@ -27,6 +27,7 @@ class PostFeed extends React.Component {
             .then(posts => {
                 this.setState({ posts })
             })
+            .catch(err => console.error(err));
     }
 
     handleChange = (event) => {
@@ -94,6 +95,62 @@ class PostFeed extends React.Component {
             });
     }
 
+    handleToggleLike = post => {
+        const { auth } = this.props;
+
+        const isPostLiked = post.likes.includes(auth.user._id);
+
+        const sendRequest = isPostLiked ? unlikePost : likePost;
+
+        sendRequest(post._id)
+            .then(postData => {
+                const postIndex = this.state.posts.findIndex(post => post._id === postData._id);
+
+                const updatedPosts = [
+                    ...this.state.posts.slice(0, postIndex),
+                    postData,
+                    ...this.state.posts.slice(postIndex + 1)
+                ];
+
+                this.setState({ posts: updatedPosts });
+            })
+            .catch(err => console.error(err));
+    }
+
+    handleAddComment = (postId, text) => {
+        const comment = { text };
+
+        addComment(postId, comment)
+            .then(postData => {
+                const postIndex = this.state.posts.findIndex(post => post._id === postData._id);
+
+                const updatedPosts = [
+                    ...this.state.posts.slice(0, postIndex),
+                    postData,
+                    ...this.state.posts.slice(postIndex + 1)
+                ];
+
+                this.setState({ posts: updatedPosts });
+            })
+            .catch(err => console.error(err));
+    }
+
+    handleDeleteComment = (postId, comment) => {
+        deleteComment(postId, comment)
+            .then(postData => {
+                const postIndex = this.state.posts.findIndex(post => post._id === postData._id);
+
+                const updatedPosts = [
+                    ...this.state.posts.slice(0, postIndex),
+                    postData,
+                    ...this.state.posts.slice(postIndex + 1)
+                ];
+
+                this.setState({ posts: updatedPosts });
+            })
+            .catch(err => console.error(err));
+    }
+
     render() {
         const { classes, auth } = this.props;
         const { posts, text, image, isAddingPost, isDeletingPost } = this.state;
@@ -125,7 +182,10 @@ class PostFeed extends React.Component {
                         auth={auth}
                         post={post}
                         isDeletingPost={isDeletingPost}
-                        handleDeletePost={this.handleDeletePost} />
+                        handleDeletePost={this.handleDeletePost}
+                        handleToggleLike={this.handleToggleLike}
+                        handleAddComment={this.handleAddComment}
+                        handleDeleteComment={this.handleDeleteComment} />
                 ))}
             </div>
         );
